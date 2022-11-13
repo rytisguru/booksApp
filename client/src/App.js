@@ -1,30 +1,21 @@
-import './App.css';
-import { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import socketIO from 'socket.io-client';
 
-const socket = socketIO.connect('http://localhost:4000');
+import Home from './routes/home/home.jsx';
+import Photo from './routes/photo/photo.jsx';
+import Books from './routes/books/books';
+
+const socket = socketIO.connect(process.env.REACT_APP_SERVER_URL);
 
 function App() {
-  const [img, setImg] = useState('')
-
-  useEffect(() => {
-    socket.on('setImage', ({ url }) => setImg(url));
-  }, [socket, img]);
-
-  const onSubmit = (e) => {
-    e.preventDefault()
-
-    socket.emit("getImage")
-  }
-
   return (
-    <div className="container">
-      <form onSubmit={onSubmit}>
-        <input name="title" type="text" />
-        {img}
-        <button type="submit">GET IMAGE</button>
-      </form>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />}></Route>
+        <Route path="/photo" element={<Photo socket={socket} />}></Route>
+        <Route path="/books" element={<Books socket={socket} />}></Route>
+      </Routes>
+    </BrowserRouter>
   );
 }
 

@@ -13,7 +13,15 @@ datasource db {
 model Books {
   id String @id @default(uuid())
   title String
-  year String
+  author String
+  pages Int?
+  year Int?
+  price Float
+  image String
+  section String?
+  shelf Int?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 // model Post {
