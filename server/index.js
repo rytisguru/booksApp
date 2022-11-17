@@ -56,7 +56,7 @@ const socketIO = new Server(httpServer, {
   cors: {
     origin: process.env.CLIENT_URL
   }
-}); 
+});
 
 socketIO.on('connection', (socket) => {
   console.log(`⚡: ${socket.id} user just connected!`);
@@ -64,7 +64,7 @@ socketIO.on('connection', (socket) => {
   socket.on('saveImage', ({ image }) => {
     var base64Data = image.replace(/^data:image\/jpeg;base64,/, "");
 
-    var fileName = "book_" + Math.floor(Math.random() * 10000) + ".jpeg";
+    var fileName = "book_" + Math.floor(Math.random() * 10000) + "_" + Math.floor(Math.random() * 100000) + ".jpeg";
     writeFile("images/" + fileName, base64Data, 'base64', function (err) {
       console.log(err);
     });
@@ -76,13 +76,13 @@ socketIO.on('connection', (socket) => {
       data: {
         title: data.title,
         author: data.author,
-        pages: JSON.parse(data.pages),
-        year: JSON.parse(data.year),
-        price: JSON.parse(data.price),
+        pages: parseInt(data.pages),
+        year: parseInt(data.year),
+        price: parseFloat(data.price),
         image: data.image,
         section: data.section,
-        shelf: data.shelf
-      } 
+        shelf: parseInt(data.shelf)
+      }
     }).then(book => {
       socket.emit("saveData", { id: book.id, status: true, error: "" })
     }).catch((err) => {
@@ -96,12 +96,12 @@ socketIO.on('connection', (socket) => {
       data: {
         title: data.title,
         author: data.author,
-        pages: JSON.parse(data.pages),
-        year: JSON.parse(data.year),
-        price: JSON.parse(data.price),
+        pages: parseInt(data.pages),
+        year: parseInt(data.year),
+        price: parseFloat(data.price),
         image: data.image,
         section: data.section,
-        shelf: data.shelf
+        shelf: parseInt(data.shelf)
       }
     }).then(book => {
       socket.emit("updateData", { status: true, error: "" })
@@ -115,57 +115,50 @@ socketIO.on('connection', (socket) => {
   });
 });
 
-app.get('/getLatestRow', async (req, res) => {
-  const latestRow = await prisma.books.findMany({
+app.get('/getAuthors', async (req, res) => {
+  const authors = await prisma.books.findMany({
+    select: { author: true }
+  })
+  const uniqueAuthors = []
+  authors.map(authors => {
+    if (!uniqueAuthors.includes(authors.author)) {
+      uniqueAuthors.push(authors.author)
+    }
+  })
+  res.json(uniqueAuthors.sort((a, b) => a.localeCompare(b)))
+}) 
+
+app.get('/getBooks', async (req, res) => {
+  const books = await prisma.books.findMany({
+    select: {
+      id: true,
+      title: true
+    },
     orderBy: {
       createdAt: 'desc'
-    },
-    take: 1
+    }
   })
-  res.json(latestRow)
+  const booksArray = [];
+  books.map(book => { 
+    booksArray.push({ id: book.id, name: book.title })
+  })
+  res.json(booksArray);
 })
 
-app.get('/prevBook/:cursor', async (req, res) => {
-  const book = await prisma.books.findMany({
-    take: -1,
-    skip: 1,
-    cursor: {
-      id: req.params.cursor,
-    },
-    orderBy: {
-      createdAt: 'asc'
-    }
+app.get('/getBook/:book', async (req, res) => {
+  const book = await prisma.books.findFirst({
+    where: { id: req.params.book }
   })
-  if (book.length !== 0) {
-    return res.json(book)
-  }
-  res.json(null)
-});
-
-app.get('/nextBook/:cursor', async (req, res) => {
-  const book = await prisma.books.findMany({
-    take: 1,
-    skip: 1,
-    cursor: {
-      id: req.params.cursor,
-    },
-    orderBy: {
-      createdAt: 'asc'
-    }
-  })
-  if (book.length !== 0) {
-    return res.json(book)
-  }
-  res.json(null)
-});
+  res.json(book);
+})
 
 app.get('/images/:image', (req, res) => {
   try {
     const path = __dirname + '/images/' + req.params.image
-    if(existsSync(path)){
+    if (existsSync(path)) {
       res.sendFile(path)
     } else {
-      res.json(null) 
+      res.json(null)
     }
   } catch (error) {
     console.log(error)

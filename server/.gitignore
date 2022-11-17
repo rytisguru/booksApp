@@ -12,6 +12,9 @@
 # images
 /images
 
+# certificates
+/cert
+
 # production
 /build
 

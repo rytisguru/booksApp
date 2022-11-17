@@ -3,7 +3,7 @@ import Spinner from './../spinner/spiner.component';
 
 import './BookForm.styles.scss';
 
-const BookForm = ({ data, updateData, onSubmit, onEdit }) => {
+const BookForm = ({ data, updateData, onSubmit, onEdit, authors }) => {
 
     // const Image = () => {
     //     const [image, setImage] = useState(null);
@@ -38,7 +38,11 @@ const BookForm = ({ data, updateData, onSubmit, onEdit }) => {
                     title="Autorius"
                     value={data.author}
                     updateData={updateData}
+                    dataList="authors"
                 />
+                <datalist id="authors">
+                    {authors.map(author => <option key={author} value={author}></option>)}
+                </datalist>
                 <CustomInput
                     name="year"
                     title="Metai"
@@ -84,7 +88,6 @@ const BookForm = ({ data, updateData, onSubmit, onEdit }) => {
                 {data.image === ""
                     ? <Spinner />
                     : <img src={process.env.REACT_APP_SERVER_URL + '/images/' + data.image} alt="" />
-
                 }
             </div>
         </>
